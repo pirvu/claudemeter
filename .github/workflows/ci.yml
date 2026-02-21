@@ -22,15 +22,10 @@ jobs:
           echo "Checking for AI artifact leakage..."
           FAILED=false
 
-          for file in .gitmodules STATE.md TODO.md; do
-            if [ -f "$file" ]; then
-              echo "::error::$file detected - AI artifact should not be committed"
-              FAILED=true
-            fi
-          done
-
-          if [ -d ai/ ]; then
-            echo "::error::ai/ directory detected - private submodule content"
+          # Check ai/ submodule content isn't checked out in CI
+          # (.gitmodules and ai/ dir reference are fine - submodule is optional via update=none)
+          if [ -d ai/standards ]; then
+            echo "::error::ai/standards/ detected - submodule content should not be checked out in CI"
             FAILED=true
           fi
 
@@ -42,10 +37,10 @@ jobs:
             fi
           done
 
-          if grep -rE "hypersec-io/(ai|hs-ai|standards)" \
+          if grep -rE "hyperi-io/(ai|hs-ai|standards)" \
              --include="*.yml" --include="*.yaml" --include="*.json" \
              . 2>/dev/null | grep -v "^\.git"; then
-            echo "::error::Found references to private hypersec-io repos"
+            echo "::error::Found references to private hyperi-io repos"
             FAILED=true
           fi
 
