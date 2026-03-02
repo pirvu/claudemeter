@@ -11,8 +11,7 @@ on:
 jobs:
   security:
     name: Security
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ${{ vars.GH_RUNNER_DEFAULT || 'ubuntu-latest' }}    steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -63,8 +62,7 @@ jobs:
 
   quality:
     name: Quality
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ${{ vars.GH_RUNNER_DEFAULT || 'ubuntu-latest' }}    steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -104,8 +102,7 @@ jobs:
   package:
     name: Package
     needs: [security, quality]
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ${{ vars.GH_RUNNER_DEFAULT || 'ubuntu-latest' }}    steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
