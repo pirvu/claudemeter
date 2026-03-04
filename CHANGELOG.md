@@ -1,3 +1,17 @@
+## [1.3.8](https://github.com/hyperi-io/claudemeter/compare/v1.3.7...v1.3.8) (2026-03-04)
+
+
+### Bug Fixes
+
+* account swap detection for org and personal accounts ([#6](https://github.com/hyperi-io/claudemeter/issues/6)) ([425b0e0](https://github.com/hyperi-io/claudemeter/commit/425b0e0f8fecdf0731d749aa59b33c40a1ec4eff))
+* clear stale login_failed state on manual retry ([#6](https://github.com/hyperi-io/claudemeter/issues/6)) ([3292cd5](https://github.com/hyperi-io/claudemeter/commit/3292cd58f1f92886f719087745a29fc1381e707c))
+* correct YAML syntax in CI and release workflows ([ae1f886](https://github.com/hyperi-io/claudemeter/commit/ae1f886ffd2442e6ef7c9ada2476b518f9d01d98))
+* detect account switching and show active account in tooltip ([#6](https://github.com/hyperi-io/claudemeter/issues/6)) ([268caad](https://github.com/hyperi-io/claudemeter/commit/268caade0763f657c8a582cccee2b9da70fe6433))
+* show plan details on separate tooltip line ([#6](https://github.com/hyperi-io/claudemeter/issues/6)) ([0c08277](https://github.com/hyperi-io/claudemeter/commit/0c0827711fb6d286f4a3c26a158e92f397781109))
+* strip org suffix from personal account names in tooltip ([#6](https://github.com/hyperi-io/claudemeter/issues/6)) ([6950f23](https://github.com/hyperi-io/claudemeter/commit/6950f23642141d974dc0928d066245d215b5d4ee))
+* use GH_RUNNER_DEFAULT variable instead of hardcoded runner ([3173c7d](https://github.com/hyperi-io/claudemeter/commit/3173c7d84b8434aaeab51554cf031cfce07cde41))
+* watch credentials file for account switching, show plan in tooltip ([#6](https://github.com/hyperi-io/claudemeter/issues/6)) ([551b42a](https://github.com/hyperi-io/claudemeter/commit/551b42a97197ab621ae307849a4a9768a6b73f12))
+
 ## [1.3.7](https://github.com/hyperi-io/claudemeter/compare/v1.3.6...v1.3.7) (2026-02-21)
 
 
