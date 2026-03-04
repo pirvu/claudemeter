@@ -1,3 +1,10 @@
+## [1.3.9](https://github.com/hyperi-io/claudemeter/compare/v1.3.8...v1.3.9) (2026-03-04)
+
+
+### Bug Fixes
+
+* bump engines.vscode to match @types/vscode 1.109.0 ([ec36f70](https://github.com/hyperi-io/claudemeter/commit/ec36f70adea4d03a3550bf1b97b92a69d7e18f3c))
+
 ## [1.3.8](https://github.com/hyperi-io/claudemeter/compare/v1.3.7...v1.3.8) (2026-03-04)
 
 
