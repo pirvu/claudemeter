@@ -16,7 +16,7 @@
 // This requires a Chromium-based browser installed on the system.
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperSec
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 const puppeteer = require('puppeteer-core');
 const path = require('path');

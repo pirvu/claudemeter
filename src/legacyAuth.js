@@ -7,7 +7,7 @@
 // The v2 auth.js handles cookie file I/O for the lightweight HTTP fetcher.
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperSec
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 const fs = require('fs');
 const path = require('path');

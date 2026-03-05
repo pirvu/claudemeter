@@ -4,7 +4,7 @@
 // Language:  JavaScript (CommonJS)
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperSec
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 const vscode = require('vscode');
 const path = require('path');

@@ -8,7 +8,7 @@
 // in httpFetcher.js and persisted for subsequent HTTP-only fetches.
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperSec
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 const fs = require('fs');
 const path = require('path');

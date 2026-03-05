@@ -4,7 +4,7 @@
 // Language:  JavaScript (CommonJS)
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperSec
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 const vscode = require('vscode');
 const { COMMANDS, CONFIG_NAMESPACE, calculateResetClockTime, calculateResetClockTimeExpanded, getCurrencySymbol, getUse24HourTime } = require('./utils');
@@ -686,6 +686,10 @@ function updateStatusBar(item, usageData, activityStats = null, sessionData = nu
     tooltipLines.push('');
     if (usageData) {
         tooltipLines.push(`Updated: ${usageData.timestamp.toLocaleTimeString(undefined, { hour12: !getUse24HourTime() })}`);
+    }
+    const extVersion = vscode.extensions.getExtension('HyperSec.claudemeter')?.packageJSON?.version;
+    if (extVersion) {
+        tooltipLines.push(`Claudemeter v${extVersion}`);
     }
     tooltipLines.push('Click to refresh');
 

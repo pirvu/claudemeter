@@ -4,7 +4,7 @@
 // Language:  JavaScript (CommonJS)
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperI
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 const fs = require('fs');
 const path = require('path');

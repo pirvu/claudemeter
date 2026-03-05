@@ -27,7 +27,7 @@
 //    runtime cost during normal HTTP fetch cycles.
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperSec
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 const path = require('path');
 const os = require('os');

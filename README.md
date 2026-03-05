@@ -273,7 +273,7 @@ Paying it forward by the hoopy froods at HyperI (nee HyperSec)
 This repo includes an optional `ai/` submodule containing the HyperI AI assistant meta layer ony top of Claude Code and coding standards. It's a private repo - external contributors can safely ignore it.
 
 ```bash
-# HyperSec devs only - init the submodule if you have access
+# HyperI devs only - init the submodule if you have access
 git submodule update --init ai
 ```
 

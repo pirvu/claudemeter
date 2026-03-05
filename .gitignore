@@ -47,7 +47,7 @@ examine-*.js
 RELEASE_NOTES_*.md
 
 # ===========================================
-# HyperSec AI Development Tooling (LOCAL ONLY)
+# HyperI AI Development Tooling (LOCAL ONLY)
 # ===========================================
 # AI assistant files (Claude, Cursor, Codex, Gemini)
 CLAUDE.md
