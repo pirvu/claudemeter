@@ -1,9 +1,9 @@
-// Project:   Claudemeter v2 (Lightweight)
+// Project:   Claudemeter v2 (Streamlined)
 // File:      extension.js
 // Purpose:   VS Code extension entry point and lifecycle management
 // Language:  JavaScript (CommonJS)
 //
-// v2 replaces Puppeteer browser automation with lightweight HTTP cookie-based
+// v2 replaces Puppeteer browser automation with streamlined HTTP cookie-based
 // fetching. The legacy browser scraper is retained as an opt-in fallback via
 // the "claudemeter.useLegacyScraper" setting.
 //
@@ -14,7 +14,20 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const { ClaudeHttpFetcher } = require('./src/httpFetcher');
-const { ClaudeUsageScraper, BrowserState } = require('./src/scraper');
+
+// Legacy scraper is lazy-loaded only when useLegacyScraper is enabled.
+// This avoids loading puppeteer-core (an external dependency not bundled in the VSIX)
+// at startup when it's not needed.
+let _scraperModule = null;
+function getScraperModule() {
+    if (!_scraperModule) {
+        _scraperModule = require('./src/scraper');
+    }
+    return _scraperModule;
+}
+function getLegacyBrowserState() {
+    return getScraperModule().BrowserState;
+}
 const { createStatusBarItem, updateStatusBar, startSpinner, stopSpinner, refreshServiceStatus } = require('./src/statusBar');
 const { ActivityMonitor } = require('./src/activityMonitor');
 const { SessionTracker } = require('./src/sessionTracker');
@@ -202,7 +215,7 @@ async function fetchUsageHttp(isManualRetry = false) {
 // Legacy: browser-based scraping (fallback if HTTP method breaks)
 async function fetchUsageLegacy(isManualRetry = false) {
     if (!scraper) {
-        scraper = new ClaudeUsageScraper();
+        scraper = new (getScraperModule().ClaudeUsageScraper)();
         fileLog('Created new ClaudeUsageScraper instance (legacy mode)');
     }
 
@@ -218,7 +231,7 @@ async function fetchUsageLegacy(isManualRetry = false) {
         }
 
         if (isManualRetry) {
-            BrowserState.clear();
+            getLegacyBrowserState().clear();
         }
 
         fileLog('Legacy: Calling ensureLoggedIn()...');
@@ -396,7 +409,7 @@ function setupCredentialsMonitoring(context) {
 
                 // Clear session so next fetch uses the new account
                 if (isLegacyMode()) {
-                    BrowserState.clear();
+                    getLegacyBrowserState().clear();
                     if (fs.existsSync(PATHS.BROWSER_SESSION_DIR)) {
                         try {
                             fs.rmSync(PATHS.BROWSER_SESSION_DIR, { recursive: true, force: true });
@@ -406,17 +419,27 @@ function setupCredentialsMonitoring(context) {
                         }
                     }
                 } else if (httpFetcher) {
-                    httpFetcher.clearSession();
+                    // Clear login browser cache so the browser opens fresh for the
+                    // new account rather than auto-logging in as the old one
+                    httpFetcher.clearSession({ clearLoginBrowserCache: true });
                 }
                 loginWasCancelled = false;
                 isFirstFetch = true;
 
-                vscode.window.showInformationMessage(
-                    'Claudemeter: Claude account switch detected. Click the status bar item to log in with the new account.'
+                // Prompt user to log in for the new account
+                const action = await vscode.window.showInformationMessage(
+                    'Claudemeter: Account switched. Log in to refresh usage data.',
+                    'Log In Now',
+                    'Later'
                 );
+                if (action === 'Log In Now') {
+                    performFetch(true).catch(err => {
+                        fileLog(`Post-switch fetch failed: ${err.message}`);
+                    });
+                }
+            } else {
+                await updateStatusBarWithAllData();
             }
-
-            await updateStatusBarWithAllData();
         };
 
         credentialsWatcher.onDidChange(handleCredentialsChange);
@@ -603,7 +626,7 @@ async function activate(context) {
             const debugChannel = getDebugChannel();
 
             debugChannel.appendLine(`\n=== DIAGNOSTICS (${new Date().toLocaleString()}) ===`);
-            debugChannel.appendLine(`Mode: ${isLegacyMode() ? 'Legacy (browser scraper)' : 'HTTP (lightweight)'}`);
+            debugChannel.appendLine(`Mode: ${isLegacyMode() ? 'Legacy (browser scraper)' : 'HTTP (streamlined)'}`);
 
             if (isLegacyMode() && scraper) {
                 const diag = scraper.getDiagnostics();
@@ -673,7 +696,7 @@ async function activate(context) {
                 );
                 if (confirm === 'Yes, Clear Session') {
                     if (isLegacyMode()) {
-                        if (!scraper) scraper = new ClaudeUsageScraper();
+                        if (!scraper) scraper = new (getScraperModule().ClaudeUsageScraper)();
                         const result = await scraper.clearSession();
                         vscode.window.showInformationMessage(result.message);
                     } else {
@@ -695,7 +718,7 @@ async function activate(context) {
             try {
                 vscode.window.showInformationMessage('Opening browser for Claude.ai login...');
                 if (isLegacyMode()) {
-                    if (!scraper) scraper = new ClaudeUsageScraper();
+                    if (!scraper) scraper = new (getScraperModule().ClaudeUsageScraper)();
                     const result = await scraper.forceOpenBrowser();
                     if (result.success) {
                         vscode.window.showInformationMessage(result.message);
@@ -724,11 +747,35 @@ async function activate(context) {
 
     const config = vscode.workspace.getConfiguration(CONFIG_NAMESPACE);
 
-    if (config.get('fetchOnStartup', true)) {
+    if (config.get('fetchOnStartup', true) && !config.get('tokenOnlyMode', false)) {
         console.log('Claudemeter: Scheduling fetch on startup...');
         setTimeout(async () => {
+            // Check if we have a session before fetching
+            const fetcher = isLegacyMode() ? null : new ClaudeHttpFetcher();
+            const hasSession = isLegacyMode()
+                ? (getScraperModule().ClaudeUsageScraper.prototype.hasExistingSession
+                    ? new (getScraperModule().ClaudeUsageScraper)().hasExistingSession()
+                    : false)
+                : (fetcher && fetcher.hasExistingSession());
+
+            if (!hasSession && !isLegacyMode()) {
+                // First v2 run — no session cookie. Prompt user to log in.
+                httpFetcher = fetcher;
+                fileLog('No session cookie found on startup — prompting user to log in');
+                const action = await vscode.window.showInformationMessage(
+                    'Claudemeter: Log in to Claude.ai to see your usage limits.',
+                    'Log In Now',
+                    'Later'
+                );
+                if (action === 'Log In Now') {
+                    await performFetch(true);
+                }
+                return;
+            }
+
             console.log('Claudemeter: Starting fetch on startup...');
             try {
+                if (fetcher && !isLegacyMode()) httpFetcher = fetcher;
                 const result = await performFetch();
                 if (result.webError) {
                     console.log('Claudemeter: Startup fetch web error:', result.webError.message);

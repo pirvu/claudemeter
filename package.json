@@ -258,7 +258,7 @@
         "claudemeter.useLegacyScraper": {
           "type": "boolean",
           "default": false,
-          "description": "Use legacy browser-based scraper instead of lightweight HTTP fetching. The default HTTP method calls undocumented Claude.ai API endpoints that could change without notice. Enable this fallback if the HTTP method stops working due to API changes. Requires a Chromium-based browser (Chrome, Edge, Brave, etc.)."
+          "description": "Use legacy browser-based scraper instead of streamlined HTTP fetching. The default HTTP method calls undocumented Claude.ai API endpoints that could change without notice. Enable this fallback if the HTTP method stops working due to API changes. Requires a Chromium-based browser (Chrome, Edge, Brave, etc.)."
         },
         "claudemeter.debugLogFile": {
           "type": "string",

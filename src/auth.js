@@ -1,4 +1,4 @@
-// Project:   Claudemeter v2 (Lightweight)
+// Project:   Claudemeter v2 (Streamlined)
 // File:      auth.js
 // Purpose:   Session cookie management (file-based, no browser dependency)
 // Language:  JavaScript (CommonJS)

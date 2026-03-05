@@ -19,7 +19,7 @@ src/**
 extension.js
 scripts/**
 
-# Dependencies (bundled)
+# Dependencies (all bundled by esbuild)
 node_modules/**
 
 # Keep bundled output

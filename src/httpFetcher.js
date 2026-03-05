@@ -1,4 +1,4 @@
-// Project:   Claudemeter v2 (Lightweight)
+// Project:   Claudemeter v2 (Streamlined)
 // File:      httpFetcher.js
 // Purpose:   HTTP-based Claude.ai usage data fetching (replaces browser automation)
 // Language:  JavaScript (CommonJS)
@@ -151,7 +151,7 @@ class ClaudeHttpFetcher {
         return true;
     }
 
-    clearSession() {
+    clearSession({ clearLoginBrowserCache = false } = {}) {
         try {
             if (fs.existsSync(PATHS.SESSION_COOKIE_FILE)) {
                 fs.unlinkSync(PATHS.SESSION_COOKIE_FILE);
@@ -163,6 +163,17 @@ class ClaudeHttpFetcher {
                 fs.rmSync(oldSessionDir, { recursive: true, force: true });
                 fileLog('Cleaned up old browser-session directory');
             }
+            // On account switch, clear the login browser's cached session so the
+            // browser opens fresh for the new account instead of auto-logging in
+            // as the previous account.
+            if (clearLoginBrowserCache) {
+                const loginSessionDir = path.join(PATHS.CONFIG_DIR, 'login-session');
+                if (fs.existsSync(loginSessionDir)) {
+                    fs.rmSync(loginSessionDir, { recursive: true, force: true });
+                    fileLog('Cleared login browser cache for account switch');
+                }
+            }
+            this._cachedOrgId = null;
             return { success: true, message: 'Session cleared. Next fetch will prompt for login.' };
         } catch (error) {
             fileLog(`Error clearing session: ${error.message}`);
@@ -171,6 +182,40 @@ class ClaudeHttpFetcher {
     }
 
     // --- HTTP Fetching ---
+
+    // Fetch bootstrap using an explicit sessionKey (before it's saved to disk).
+    async _fetchBootstrapWithKey(sessionKey) {
+        const response = await fetch(`${CLAUDE_URLS.BASE}/api/bootstrap`, {
+            method: 'GET',
+            headers: {
+                ...BROWSER_HEADERS,
+                'Cookie': `sessionKey=${sessionKey}`,
+            },
+        });
+        if (!response.ok) return null;
+        return response.json();
+    }
+
+    // Fetch bootstrap using the CLI OAuth access token as a Bearer token.
+    // Returns the account email if successful, null if the token doesn't work.
+    async _fetchBootstrapWithCliToken() {
+        const creds = readCredentials();
+        if (!creds?.accessToken) return null;
+        try {
+            const response = await fetch(`${CLAUDE_URLS.BASE}/api/bootstrap`, {
+                method: 'GET',
+                headers: {
+                    ...BROWSER_HEADERS,
+                    'Authorization': `Bearer ${creds.accessToken}`,
+                },
+            });
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data?.account?.email_address || null;
+        } catch {
+            return null;
+        }
+    }
 
     async _fetchEndpoint(url) {
         const cookie = this._readCookie();
@@ -201,19 +246,39 @@ class ClaudeHttpFetcher {
         return response.json();
     }
 
+    // Resolve the correct web org UUID via /api/bootstrap.
+    // The CLI credentials orgId differs from the web session orgId.
+    async _resolveOrgId() {
+        if (this._cachedOrgId) return this._cachedOrgId;
+
+        fileLog('Resolving web org UUID via /api/bootstrap...');
+        const data = await this._fetchEndpoint(`${CLAUDE_URLS.BASE}/api/bootstrap`);
+        const memberships = data?.account?.memberships;
+        if (!memberships || memberships.length === 0) {
+            throw new Error('NO_ORG_ID');
+        }
+
+        // Use first org (personal account). If there are multiple,
+        // prefer the one matching the CLI credentials org name.
+        const orgUuid = memberships[0].organization.uuid;
+        const orgName = memberships[0].organization.name;
+        this._cachedOrgId = orgUuid;
+
+        this.accountInfo = {
+            name: data.account?.display_name || data.account?.full_name,
+            email: data.account?.email_address,
+            orgName,
+        };
+
+        fileLog(`Resolved org: ${orgUuid.slice(0, 8)}... (${orgName})`);
+        return orgUuid;
+    }
+
     async fetchUsageData() {
         const debug = isDebugEnabled();
         const debugChannel = getDebugChannel();
 
-        // Get org ID from credentials or stored cookie
-        const creds = readCredentials();
         const cookie = this._readCookie();
-        const orgId = creds?.orgId || cookie?.orgId;
-
-        if (!orgId) {
-            throw new Error('NO_ORG_ID');
-        }
-
         if (!cookie || !cookie.sessionKey) {
             throw new Error('NO_SESSION');
         }
@@ -223,6 +288,7 @@ class ClaudeHttpFetcher {
             throw new Error('SESSION_EXPIRED');
         }
 
+        const orgId = await this._resolveOrgId();
         const baseUrl = `${CLAUDE_URLS.BASE}/api/organizations/${orgId}`;
         const usageUrl = `${baseUrl}/usage`;
         const creditsUrl = `${baseUrl}/prepaid/credits`;
@@ -231,6 +297,7 @@ class ClaudeHttpFetcher {
         if (debug) {
             debugChannel.appendLine(`\n=== HTTP FETCH (${new Date().toLocaleString()}) ===`);
             debugChannel.appendLine(`Org ID: ${orgId}`);
+            debugChannel.appendLine(`Account: ${this.accountInfo?.name || 'unknown'}`);
             debugChannel.appendLine(`Fetching: ${usageUrl}`);
         }
 
@@ -374,6 +441,14 @@ class ClaudeHttpFetcher {
         this._acquireLoginLock();
         fileLog('Login flow started');
 
+        // Get CLI account email upfront so we can verify the user logs into the correct account.
+        const cliEmail = await this._fetchBootstrapWithCliToken();
+        if (cliEmail) {
+            fileLog(`CLI account email: ${cliEmail} — will verify after login`);
+        } else {
+            fileLog('CLI token auth unavailable — account verification skipped');
+        }
+
         let browser = null;
         let page = null;
 
@@ -427,11 +502,15 @@ class ClaudeHttpFetcher {
                 debugChannel.appendLine('Browser opened - awaiting login');
             }
 
+            const loginTitle = cliEmail
+                ? `Log in to Claude.ai as ${cliEmail}...`
+                : 'Login required. Please log in to Claude.ai in the browser window...';
+
             // Wait for login with progress notification
             const loginResult = await vscode.window.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
-                    title: 'Login required. Please log in to Claude.ai in the browser window...',
+                    title: loginTitle,
                     cancellable: false,
                 },
                 async () => {
@@ -440,29 +519,81 @@ class ClaudeHttpFetcher {
             );
 
             if (loginResult.success) {
-                // Extract and save the sessionKey cookie
+                // Extract and verify the sessionKey cookie before saving
                 const cookies = await page.cookies(CLAUDE_URLS.BASE);
                 const sessionCookie = cookies.find(c => c.name === 'sessionKey');
 
-                if (sessionCookie) {
-                    const creds = readCredentials();
-                    this._saveCookie(sessionCookie.value, sessionCookie.expires, creds?.orgId);
+                if (!sessionCookie) {
+                    throw new Error('Login appeared successful but no sessionKey cookie found');
+                }
 
-                    vscode.window.withProgress(
+                // Verify the logged-in account matches the CLI account
+                fileLog('Verifying browser account matches CLI account...');
+                const bootstrapData = await this._fetchBootstrapWithKey(sessionCookie.value);
+                const browserEmail = bootstrapData?.account?.email_address || null;
+
+                if (cliEmail && browserEmail && cliEmail.toLowerCase() !== browserEmail.toLowerCase()) {
+                    // Wrong account — clear browser cache and force re-login
+                    fileLog(`Account mismatch: browser=${browserEmail}, CLI=${cliEmail}`);
+                    const loginSessionDir = path.join(PATHS.CONFIG_DIR, 'login-session');
+                    if (fs.existsSync(loginSessionDir)) {
+                        fs.rmSync(loginSessionDir, { recursive: true, force: true });
+                    }
+                    await vscode.window.showErrorMessage(
+                        `Wrong account. Browser is signed in as ${browserEmail} but Claude Code is using ${cliEmail}. Please log in with the correct account.`,
+                        { modal: false }
+                    );
+                    // Navigate back to login page for another attempt
+                    await page.goto(CLAUDE_URLS.LOGIN, { waitUntil: 'networkidle2', timeout: TIMEOUTS.PAGE_LOAD });
+                    const retryResult = await vscode.window.withProgress(
                         {
                             location: vscode.ProgressLocation.Notification,
-                            title: 'Login successful! Session saved.',
+                            title: `Log in as ${cliEmail} in the browser window...`,
                             cancellable: false,
                         },
-                        () => new Promise(resolve => setTimeout(resolve, 3000))
+                        async () => {
+                            return await this._waitForSessionKey(page, browser);
+                        }
                     );
-
-                    fileLog('Login successful, cookie saved');
-                    if (debug) {
-                        debugChannel.appendLine('Login successful - sessionKey cookie extracted and saved');
+                    if (!retryResult.success) {
+                        throw new Error(retryResult.cancelled ? 'LOGIN_CANCELLED' : 'LOGIN_TIMEOUT');
                     }
+                    const retryCookies = await page.cookies(CLAUDE_URLS.BASE);
+                    const retrySessionCookie = retryCookies.find(c => c.name === 'sessionKey');
+                    if (!retrySessionCookie) {
+                        throw new Error('No sessionKey cookie after retry');
+                    }
+                    // Re-verify after retry
+                    const retryBootstrap = await this._fetchBootstrapWithKey(retrySessionCookie.value);
+                    const retryBrowserEmail = retryBootstrap?.account?.email_address || null;
+                    if (cliEmail && retryBrowserEmail && cliEmail.toLowerCase() !== retryBrowserEmail.toLowerCase()) {
+                        fileLog(`Account mismatch on retry: browser=${retryBrowserEmail}, CLI=${cliEmail}`);
+                        throw new Error('WRONG_ACCOUNT');
+                    }
+                    const creds = readCredentials();
+                    this._saveCookie(retrySessionCookie.value, retrySessionCookie.expires, creds?.orgId);
                 } else {
-                    throw new Error('Login appeared successful but no sessionKey cookie found');
+                    if (!cliEmail) {
+                        fileLog('CLI token auth not supported for verification — skipping account check');
+                    } else {
+                        fileLog(`Account verified: ${browserEmail}`);
+                    }
+                    const creds = readCredentials();
+                    this._saveCookie(sessionCookie.value, sessionCookie.expires, creds?.orgId);
+                }
+
+                vscode.window.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Notification,
+                        title: 'Login successful! Session saved.',
+                        cancellable: false,
+                    },
+                    () => new Promise(resolve => setTimeout(resolve, 3000))
+                );
+
+                fileLog('Login successful, cookie saved');
+                if (debug) {
+                    debugChannel.appendLine('Login successful - sessionKey cookie extracted and saved');
                 }
             } else if (loginResult.cancelled) {
                 fileLog('Login cancelled by user');

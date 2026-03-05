@@ -28,6 +28,7 @@ function readCredentials() {
             subscriptionType: oauth.subscriptionType || null,
             rateLimitTier: oauth.rateLimitTier || null,
             refreshToken: oauth.refreshToken || null,
+            accessToken: oauth.accessToken || null,
         };
     } catch (error) {
         console.warn('Claudemeter: Failed to read credentials:', error.message);

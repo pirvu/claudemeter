@@ -774,7 +774,7 @@ function stopSpinner(webError = null, tokenError = null) {
             '**Actions**',
             '• Click to retry',
             '• Run "Claudemeter: Show Debug Output" for details',
-            '• Run "Claudemeter: Reset Browser Connection" to reconnect'
+            '• Run "Claudemeter: Clear Session (Re-login)" to re-authenticate'
         ];
         const errorTooltip = new vscode.MarkdownString(errorLines.join('  \n'));
 
@@ -823,7 +823,7 @@ function stopSpinner(webError = null, tokenError = null) {
                 '**Actions**',
                 '• Click to retry',
                 '• Run "Claudemeter: Show Debug Output" for details',
-                '• Run "Claudemeter: Reset Browser Connection" to reconnect'
+                '• Run "Claudemeter: Clear Session (Re-login)" to re-authenticate'
             ];
         }
         const errorTooltip = new vscode.MarkdownString(errorLines.join('  \n'));

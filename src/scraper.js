@@ -18,7 +18,13 @@
 // License:   MIT
 // Copyright: (c) 2026 HYPERI PTY LIMITED
 
-const puppeteer = require('puppeteer-core');
+// puppeteer-core is lazy-loaded to avoid crashing on import when the module
+// is not bundled (esbuild externalises it). Only loaded when legacy mode is used.
+let _puppeteer = null;
+function getPuppeteer() {
+    if (!_puppeteer) _puppeteer = require('puppeteer-core');
+    return _puppeteer;
+}
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
@@ -210,7 +216,7 @@ class ClaudeUsageScraper {
     async tryConnectToExisting() {
         try {
             const browserURL = `http://127.0.0.1:${this.browserPort}`;
-            this.browser = await puppeteer.connect({
+            this.browser = await getPuppeteer().connect({
                 browserURL,
                 defaultViewport: null
             });
@@ -308,7 +314,7 @@ class ClaudeUsageScraper {
             };
 
             console.log(`Launching Chrome on port ${this.browserPort}`);
-            this.browser = await puppeteer.launch(launchOptions);
+            this.browser = await getPuppeteer().launch(launchOptions);
             this.page = await this.browser.newPage();
 
             await this.page.setUserAgent(
@@ -881,7 +887,7 @@ class ClaudeUsageScraper {
                 getDebugChannel().appendLine(`Executable: ${chromePath}`);
             }
 
-            this.browser = await puppeteer.launch(launchOptions);
+            this.browser = await getPuppeteer().launch(launchOptions);
             this.page = await this.browser.newPage();
 
             await this.page.setUserAgent(

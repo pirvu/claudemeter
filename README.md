@@ -44,7 +44,7 @@
 
 ## How It Works
 
-Claudemeter v2 uses lightweight HTTP requests to fetch your usage data directly from Claude.ai's API endpoints. A browser is only needed once for the initial login — after that, your session cookie is stored locally and all subsequent fetches complete in 1-3 seconds with no browser overhead.
+Claudemeter v2 uses streamlined HTTP requests to fetch your usage data directly from Claude.ai's API endpoints. A browser is only needed once for the initial login — after that, your session cookie is stored locally and all subsequent fetches complete in 1-3 seconds with no browser overhead.
 
 > **Why not use the Claude CLI's OAuth token?** The CLI's OAuth scopes (`user:inference`, `user:profile`, etc.) don't grant access to the usage/billing endpoints. Only the `sessionKey` cookie from a browser login works. If Anthropic ever expands the CLI scopes, the browser login could be eliminated entirely.
 
@@ -95,7 +95,7 @@ Open VS Code Settings and search for "Claudemeter" to configure:
 - **Type**: Number
 - **Default**: `15`
 - **Range**: `5-60` seconds
-- **Description**: Local token refresh interval in seconds. Controls how often local Claude Code token data is polled from JSONL files. This is a lightweight local operation (no web requests). Set higher to reduce CPU usage.
+- **Description**: Local token refresh interval in seconds. Controls how often local Claude Code token data is polled from JSONL files. This is a low-overhead local operation (no web requests). Set higher to reduce CPU usage.
 
 ### `claudemeter.tokenLimit`
 
@@ -114,7 +114,7 @@ Open VS Code Settings and search for "Claudemeter" to configure:
 
 - **Type**: Boolean
 - **Default**: `false`
-- **Description**: Use the legacy browser-based scraper instead of lightweight HTTP fetching. The default HTTP method calls undocumented Claude.ai API endpoints that could change without notice. Enable this fallback if the HTTP method stops working due to API changes. Requires a Chromium-based browser.
+- **Description**: Use the legacy browser-based scraper instead of streamlined HTTP fetching. The default HTTP method calls undocumented Claude.ai API endpoints that could change without notice. Enable this fallback if the HTTP method stops working due to API changes. Requires a Chromium-based browser.
 
 ### `claudemeter.statusBar.displayMode`
 

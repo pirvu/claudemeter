@@ -4,7 +4,7 @@
 // Language:  JavaScript (CommonJS)
 //
 // LEGACY FALLBACK: Only used when "claudemeter.useLegacyScraper" is enabled.
-// The v2 auth.js handles cookie file I/O for the lightweight HTTP fetcher.
+// The v2 auth.js handles cookie file I/O for the streamlined HTTP fetcher.
 //
 // License:   MIT
 // Copyright: (c) 2026 HYPERI PTY LIMITED
