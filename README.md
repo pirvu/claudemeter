@@ -276,7 +276,21 @@ Paying it forward by the hoopy froods at HyperI (formerly HyperSec)
 
 ### HyperI AI Tooling (Internal)
 
-HyperI developers use an internal `hyperi-ai/` tooling layer for Claude Code standards and coding conventions. It is not included in this repository. External contributors can safely ignore any references to it.
+HyperI developers use an internal `hyperi-ai/` tooling layer for Claude Code standards and coding conventions. It is not included in this repository (gitignored). External contributors can safely ignore any references to it.
+
+**HyperI devs — first-time setup:**
+
+```bash
+git clone https://github.com/hyperi-io/hyperi-ai.git hyperi-ai
+./hyperi-ai/attach.sh --agent claude
+```
+
+**Update to latest:**
+
+```bash
+git -C hyperi-ai pull
+./hyperi-ai/attach.sh --agent claude
+```
 
 ## License
 
