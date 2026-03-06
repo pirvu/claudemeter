@@ -11,7 +11,7 @@ class ActivityMonitor {
         // Stateless - calculate on-demand from usage data
     }
 
-    startMonitoring(context) {
+    startMonitoring(_context) {
         // Retained for backwards compatibility
     }
 
@@ -59,7 +59,7 @@ class ActivityMonitor {
     }
 
     // Pop culture references for status messages
-    getActivityDescription(level, claudePercent, tokenPercent) {
+    getActivityDescription(level, _claudePercent, _tokenPercent) {
         const descriptions = {
             'heavy': {
                 short: 'Running low!',

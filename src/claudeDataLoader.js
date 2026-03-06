@@ -265,7 +265,7 @@ class ClaudeDataLoader {
 
         const sessionStart = Date.now() - TIMEOUTS.SESSION_DURATION;
 
-        let dataDir = null;
+        let dataDir;
         let isProjectSpecific = false;
 
         if (this.projectDirName) {

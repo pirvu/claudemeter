@@ -374,8 +374,8 @@ function renderMultiPanelMode(
         lastDisplayedValues.weeklyText = newWeeklyText;
     }
 
-    let newTokensText = null;
-    let tokensVisible = false;
+    let newTokensText;
+    let tokensVisible;
     if (tokenPercent !== null) {
         const tokenDisplay = formatPercent(tokenPercent);
         newTokensText = `${tokenStatus.icon ? tokenStatus.icon + ' ' : ''}Tk ${tokenDisplay}`;
@@ -396,7 +396,7 @@ function renderMultiPanelMode(
         lastDisplayedValues.tokensText = newTokensText;
     }
 
-    let newSonnetText = null;
+    let newSonnetText;
     if (showSonnet && usageData && usageData.usagePercentSonnet !== null && usageData.usagePercentSonnet !== undefined) {
         const sonnetStatus = getIconAndColor(usageData.usagePercentSonnet, sonnetThresholds.warning, sonnetThresholds.error);
         const sonnetDisplay = formatPercent(usageData.usagePercentSonnet);
@@ -413,7 +413,7 @@ function renderMultiPanelMode(
         lastDisplayedValues.sonnetText = null;
     }
 
-    let newOpusText = null;
+    let newOpusText;
     if (showOpus && usageData && usageData.usagePercentOpus !== null && usageData.usagePercentOpus !== undefined) {
         const opusStatus = getIconAndColor(usageData.usagePercentOpus, opusThresholds.warning, opusThresholds.error);
         const opusDisplay = formatPercent(usageData.usagePercentOpus);
@@ -430,7 +430,7 @@ function renderMultiPanelMode(
         lastDisplayedValues.opusText = null;
     }
 
-    let newCreditsText = null;
+    let newCreditsText;
     if (showCredits && usageData && usageData.monthlyCredits) {
         const credits = usageData.monthlyCredits;
         const creditsStatus = getIconAndColor(credits.percent, creditsThresholds.warning, creditsThresholds.error);

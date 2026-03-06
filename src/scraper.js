@@ -26,7 +26,6 @@ function getPuppeteer() {
     return _puppeteer;
 }
 const path = require('path');
-const os = require('os');
 const fs = require('fs');
 const vscode = require('vscode');
 
@@ -781,7 +780,7 @@ class ClaudeUsageScraper {
                         if (browserProcess) {
                             try {
                                 browserProcess.kill('SIGKILL');
-                            } catch (killErr) {
+                            } catch (_killErr) {
                                 // Process may have already exited
                             }
                         }
@@ -817,7 +816,7 @@ class ClaudeUsageScraper {
         this.accountInfo = null;
 
         // Clear browser session (cookies) so next fetch forces fresh login
-        const sessionResult = await this.auth.clearSession();
+        await this.auth.clearSession();
 
         if (debug) {
             getDebugChannel().appendLine('Browser connection closed');
