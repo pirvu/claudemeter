@@ -4,7 +4,7 @@
 // Language:  JavaScript (CommonJS)
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperI
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 const fs = require('fs');
 const path = require('path');
@@ -28,6 +28,7 @@ function readCredentials() {
             subscriptionType: oauth.subscriptionType || null,
             rateLimitTier: oauth.rateLimitTier || null,
             refreshToken: oauth.refreshToken || null,
+            accessToken: oauth.accessToken || null,
         };
     } catch (error) {
         console.warn('Claudemeter: Failed to read credentials:', error.message);

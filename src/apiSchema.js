@@ -4,7 +4,7 @@
 // Language:  JavaScript (CommonJS)
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperSec
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 // Usage API: /api/organizations/{org}/usage
 const USAGE_API_SCHEMA = {

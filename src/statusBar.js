@@ -4,7 +4,7 @@
 // Language:  JavaScript (CommonJS)
 //
 // License:   MIT
-// Copyright: (c) 2026 HyperSec
+// Copyright: (c) 2026 HYPERI PTY LIMITED
 
 const vscode = require('vscode');
 const { COMMANDS, CONFIG_NAMESPACE, calculateResetClockTime, calculateResetClockTimeExpanded, getCurrencySymbol, getUse24HourTime } = require('./utils');
@@ -687,6 +687,10 @@ function updateStatusBar(item, usageData, activityStats = null, sessionData = nu
     if (usageData) {
         tooltipLines.push(`Updated: ${usageData.timestamp.toLocaleTimeString(undefined, { hour12: !getUse24HourTime() })}`);
     }
+    const extVersion = vscode.extensions.getExtension('HyperSec.claudemeter')?.packageJSON?.version;
+    if (extVersion) {
+        tooltipLines.push(`Claudemeter v${extVersion}`);
+    }
     tooltipLines.push('Click to refresh');
 
     const markdown = new vscode.MarkdownString(tooltipLines.join('  \n'));
@@ -770,7 +774,7 @@ function stopSpinner(webError = null, tokenError = null) {
             '**Actions**',
             '• Click to retry',
             '• Run "Claudemeter: Show Debug Output" for details',
-            '• Run "Claudemeter: Reset Browser Connection" to reconnect'
+            '• Run "Claudemeter: Clear Session (Re-login)" to re-authenticate'
         ];
         const errorTooltip = new vscode.MarkdownString(errorLines.join('  \n'));
 
@@ -819,7 +823,7 @@ function stopSpinner(webError = null, tokenError = null) {
                 '**Actions**',
                 '• Click to retry',
                 '• Run "Claudemeter: Show Debug Output" for details',
-                '• Run "Claudemeter: Reset Browser Connection" to reconnect'
+                '• Run "Claudemeter: Clear Session (Re-login)" to re-authenticate'
             ];
         }
         const errorTooltip = new vscode.MarkdownString(errorLines.join('  \n'));
