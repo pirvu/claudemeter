@@ -192,17 +192,39 @@ Open VS Code Settings and search for "Claudemeter" to configure:
 - **Default**: `false`
 - **Description**: Enable debug logging to output channel (for troubleshooting)
 
-### Threshold Configuration
+### `claudemeter.debugLogFile`
 
-Configure warning and error thresholds globally or per-gauge:
+- **Type**: String
+- **Default**: Auto-populated on first run (`~/.config/claudemeter/debug.log` or platform equivalent)
+- **Description**: Path to debug log file. Supports `~` for home directory.
 
-```json
-{
-  "claudemeter.thresholds.warning": 80,
-  "claudemeter.thresholds.error": 90,
-  "claudemeter.thresholds.tokens.warning": 65
-}
-```
+### `claudemeter.debugLogMaxSizeKB`
+
+- **Type**: Number
+- **Default**: `256`
+- **Range**: `64-2048` KB
+- **Description**: Maximum debug log file size in KB. Oldest entries are trimmed when exceeded.
+
+### `claudemeter.thresholds.warning`
+
+- **Type**: Number
+- **Default**: `80`
+- **Range**: `1-100`
+- **Description**: Usage percentage to show warning (yellow) indicator
+
+### `claudemeter.thresholds.error`
+
+- **Type**: Number
+- **Default**: `90`
+- **Range**: `1-100`
+- **Description**: Usage percentage to show error (red) indicator
+
+### `claudemeter.thresholds.tokens.warning`
+
+- **Type**: Number
+- **Default**: `65`
+- **Range**: `1-100`
+- **Description**: Token usage warning threshold (VS Code auto-compacts context at ~65-75%)
 
 ## Commands
 
