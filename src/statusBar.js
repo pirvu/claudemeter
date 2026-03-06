@@ -547,15 +547,30 @@ function updateStatusBar(item, usageData, activityStats = null, sessionData = nu
     const opusThresholds = getThresholds('opus');
     const creditsThresholds = getThresholds('credits');
 
+    const tokenOnlyMode = config.get('tokenOnlyMode', false);
+
     if (!usageData && !sessionData) {
         if (!isSpinnerActive) {
             if (statusBarItems.label) {
                 statusBarItems.label.text = `${getLabelTextWithStatus()}  `;
                 statusBarItems.label.color = getServiceStatusColor();
             }
-            setAllTooltips('Click to fetch Claude usage data');
+            if (tokenOnlyMode) {
+                // In token-only mode, show token gauge as waiting (no web fetch needed)
+                setAllTooltips('Waiting for Claude Code session...');
+                hideAllMetricItems();
+                if (displayMode === DISPLAY_MODES.COMPACT) {
+                    statusBarItems.compact.text = `${getLabelTextWithStatus()} Tk --`;
+                    statusBarItems.compact.show();
+                } else {
+                    statusBarItems.tokens.text = 'Tk --';
+                    statusBarItems.tokens.show();
+                }
+            } else {
+                setAllTooltips('Click to fetch Claude usage data');
+                hideAllMetricItems();
+            }
         }
-        hideAllMetricItems();
         return;
     }
 
