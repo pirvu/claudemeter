@@ -389,9 +389,12 @@ function setupCredentialsMonitoring(context) {
 
             if (!credentialsInfo) return;
 
-            // Detect account switch by orgId change (including null transitions
-            // for personal ↔ org switches). Token rotation is NOT a switch signal
-            // — refresh tokens rotate during normal OAuth refresh cycles.
+            // Detect account switch by orgId change (including null transitions for
+            // personal ↔ org switches). Token fields are NOT used — Claude routinely
+            // rotates refresh tokens during normal OAuth refresh cycles, which would
+            // cause false positives if we tracked them.
+            // Personal → personal switches cannot be detected this way; the
+            // "Resync Account" command (claudemeter.resyncAccount) handles that case.
             const orgChanged = previous && credentialsInfo.orgId !== previous.orgId;
 
             if (orgChanged) {
@@ -421,10 +424,10 @@ function setupCredentialsMonitoring(context) {
                 // Prompt user to log in for the new account
                 const action = await vscode.window.showInformationMessage(
                     'Claudemeter: Account switched. Log in to refresh usage data.',
-                    'Log In Now',
+                    'Log In Again',
                     'Later'
                 );
-                if (action === 'Log In Now') {
+                if (action === 'Log In Again') {
                     performFetch(true).catch(err => {
                         fileLog(`Post-switch fetch failed: ${err.message}`);
                     });
@@ -699,6 +702,26 @@ async function activate(context) {
                 }
             } catch (error) {
                 vscode.window.showErrorMessage(`Clear session failed: ${error.message}`);
+            }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(COMMANDS.RESYNC_ACCOUNT, async () => {
+            // Clears the saved session and triggers a fresh browser login.
+            // Use this after running /login in the Claude Code CLI when the
+            // automatic account-switch detection didn't fire (e.g. personal → personal).
+            try {
+                if (!httpFetcher) httpFetcher = new ClaudeHttpFetcher();
+                httpFetcher.clearSession({ clearLoginBrowserCache: true });
+                loginWasCancelled = false;
+                fileLog('Resync Account: session cleared, starting login flow');
+                const { webError } = await performFetch(true);
+                if (webError) {
+                    vscode.window.showErrorMessage(`Login failed: ${webError.message}`);
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(`Resync failed: ${error.message}`);
             }
         })
     );

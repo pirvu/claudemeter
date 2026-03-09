@@ -706,7 +706,7 @@ function updateStatusBar(item, usageData, activityStats = null, sessionData = nu
     if (extVersion) {
         tooltipLines.push(`Claudemeter v${extVersion}`);
     }
-    tooltipLines.push('Click to refresh');
+    tooltipLines.push('[Click to resync account](command:claudemeter.resyncAccount)');
 
     const markdown = new vscode.MarkdownString(tooltipLines.join('  \n'));
     markdown.isTrusted = true;  // Enable clickable links

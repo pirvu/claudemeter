@@ -27,7 +27,8 @@ const COMMANDS = {
     SHOW_DEBUG: 'claudemeter.showDebug',
     RESET_CONNECTION: 'claudemeter.resetConnection',
     CLEAR_SESSION: 'claudemeter.clearSession',
-    OPEN_BROWSER: 'claudemeter.openBrowser'
+    OPEN_BROWSER: 'claudemeter.openBrowser',
+    RESYNC_ACCOUNT: 'claudemeter.resyncAccount',
 };
 
 // Cross-platform config directory following OS conventions

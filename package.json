@@ -68,8 +68,8 @@
   "scripts": {
     "build": "node esbuild.js",
     "watch": "node esbuild.js --watch",
-    "package": "node esbuild.js --production && vsce package",
-    "publish": "node esbuild.js --production && vsce publish",
+    "package": "node esbuild.js --production && rm -f dist/*.map && vsce package",
+    "publish": "node esbuild.js --production && rm -f dist/*.map && vsce publish",
     "clear-session": "node scripts/clear-session.js"
   },
   "contributes": {
@@ -107,6 +107,11 @@
       {
         "command": "claudemeter.openBrowser",
         "title": "Login to Claude.ai",
+        "category": "Claudemeter"
+      },
+      {
+        "command": "claudemeter.resyncAccount",
+        "title": "Resync Account (after /login switch)",
         "category": "Claudemeter"
       }
     ],

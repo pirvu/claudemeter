@@ -34,6 +34,7 @@ archive/**
 
 # AI tooling (local dev only)
 ai/**
+hyperi-ai/**
 .gitmodules
 CLAUDE.md
 .cursorrules
@@ -43,6 +44,10 @@ CODEX.md
 GEMINI.md
 .gemini/**
 SKILLS.md
+
+# Dev tooling
+eslint.config.js
+.github/**
 
 # Git config files
 .gitleaks.toml
