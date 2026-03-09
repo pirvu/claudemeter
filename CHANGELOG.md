@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/hyperi-io/claudemeter/compare/v2.0.2...v2.0.3) (2026-03-09)
+
+
+### Bug Fixes
+
+* add resync account command and clean VSIX build output ([6ae3127](https://github.com/hyperi-io/claudemeter/commit/6ae3127169f653dda4d9ff4ac02db18ab63c6614))
+
 ## [2.0.2](https://github.com/hyperi-io/claudemeter/compare/v2.0.1...v2.0.2) (2026-03-06)
 
 
