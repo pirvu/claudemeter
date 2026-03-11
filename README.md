@@ -1,7 +1,5 @@
 # Claudemeter
 
-[![VS Code Installs](https://img.shields.io/visual-studio-marketplace/i/HyperSec.claudemeter)](https://marketplace.visualstudio.com/items?itemName=HyperSec.claudemeter)
-[![GitHub License](https://img.shields.io/github/license/hyperi-io/claudemeter)](https://github.com/hyperi-io/claudemeter)
 [![GitHub Issues](https://img.shields.io/github/issues/hyperi-io/claudemeter)](https://github.com/hyperi-io/claudemeter/issues)
 [![GitHub Stars](https://img.shields.io/github/stars/hyperi-io/claudemeter)](https://github.com/hyperi-io/claudemeter)
 
