@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/hyperi-io/claudemeter/compare/v2.0.3...v2.0.4) (2026-03-16)
+
+
+### Bug Fixes
+
+* auto-detect context window from model ID ([95e58ee](https://github.com/hyperi-io/claudemeter/commit/95e58ee56933f4660ac12f859acbd3fbceee4134))
+
 ## [2.0.3](https://github.com/hyperi-io/claudemeter/compare/v2.0.2...v2.0.3) (2026-03-09)
 
 
