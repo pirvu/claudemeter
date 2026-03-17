@@ -29,7 +29,7 @@ function getLegacyBrowserState() {
     return getScraperModule().BrowserState;
 }
 const { createStatusBarItem, updateStatusBar, startSpinner, stopSpinner, refreshServiceStatus } = require('./src/statusBar');
-const { ActivityMonitor } = require('./src/activityMonitor');
+const { getStats: getActivityStats } = require('./src/activityMonitor');
 const { SessionTracker } = require('./src/sessionTracker');
 const { ClaudeDataLoader } = require('./src/claudeDataLoader');
 const { CONFIG_NAMESPACE, COMMANDS, PATHS, getTokenLimit, setDevMode, isDebugEnabled, getDebugChannel, disposeDebugChannel, initFileLogger, fileLog, getDefaultDebugLogPath } = require('./src/utils');
@@ -43,7 +43,6 @@ let credentialsInfo = null;
 let autoRefreshTimer;
 let localRefreshTimer;
 let serviceStatusTimer;
-let activityMonitor;
 let sessionTracker;
 let claudeDataLoader;
 let jsonlWatcher;
@@ -265,7 +264,7 @@ async function fetchUsageLegacy(isManualRetry = false) {
 
 async function updateStatusBarWithAllData() {
     const sessionData = sessionTracker ? await sessionTracker.getCurrentSession() : null;
-    const activityStats = activityMonitor ? activityMonitor.getStats(usageData, sessionData) : null;
+    const activityStats = getActivityStats(usageData, sessionData);
     updateStatusBar(statusBarItem, usageData, activityStats, sessionData, credentialsInfo);
 }
 
@@ -465,14 +464,14 @@ async function updateTokensFromJsonl(silent = false) {
                         currentSession = await sessionTracker.startSession('Claude Code session (auto-created)');
                         debugLog(`Created new session: ${currentSession.sessionId}`);
                     }
-                    await sessionTracker.updateTokens(usage.totalTokens, getTokenLimit(usage.modelIds));
+                    await sessionTracker.updateTokens(usage.totalTokens, getTokenLimit(usage.modelIds, usage.totalTokens));
                 }
 
                 const sessionData = await sessionTracker.getCurrentSession();
-                const activityStats = activityMonitor ? activityMonitor.getStats(usageData, sessionData) : null;
+                const activityStats = getActivityStats(usageData, sessionData);
                 updateStatusBar(statusBarItem, usageData, activityStats, sessionData, credentialsInfo);
             } else {
-                const activityStats = activityMonitor ? activityMonitor.getStats(usageData, null) : null;
+                const activityStats = getActivityStats(usageData, null);
                 updateStatusBar(statusBarItem, usageData, activityStats, null, credentialsInfo);
             }
         }
@@ -565,9 +564,6 @@ async function activate(context) {
             console.log('Claudemeter: Service status refresh failed:', err.message);
         });
     }, 5 * 60 * 1000);  // 5 minutes
-
-    activityMonitor = new ActivityMonitor();
-    activityMonitor.startMonitoring(context);
 
     sessionTracker = new SessionTracker();
 

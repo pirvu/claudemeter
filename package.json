@@ -70,7 +70,10 @@
     "watch": "node esbuild.js --watch",
     "package": "node esbuild.js --production && rm -f dist/*.map && vsce package",
     "publish": "node esbuild.js --production && rm -f dist/*.map && vsce publish",
-    "clear-session": "node scripts/clear-session.js"
+    "clear-session": "node scripts/clear-session.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "contributes": {
     "commands": [
@@ -132,7 +135,7 @@
         },
         "claudemeter.localRefreshSeconds": {
           "type": "number",
-          "default": 15,
+          "default": 10,
           "minimum": 5,
           "maximum": 60,
           "description": "Local token refresh interval in seconds (5-60 seconds). Controls how often local Claude Code token data is polled from JSONL files. Set higher to reduce CPU usage."
@@ -253,7 +256,7 @@
           "default": 0,
           "minimum": 0,
           "maximum": 2000000,
-          "description": "Context window token limit override (0 = auto-detect from model). Set manually to force a specific limit."
+          "description": "Context window token limit override (0 = auto-detect from model and plan). Set manually to force a specific limit."
         },
         "claudemeter.tokenOnlyMode": {
           "type": "boolean",
@@ -292,6 +295,7 @@
     "@types/vscode": "^1.109.0",
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.27.4",
-    "eslint": "^10.0.3"
+    "eslint": "^10.0.3",
+    "vitest": "^4.1.0"
   }
 }

@@ -19,8 +19,10 @@ Thumbs.db
 npm-debug.log*
 
 # IDE
-.vscode/
 .idea/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 
 # Build output
 out/

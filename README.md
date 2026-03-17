@@ -40,6 +40,22 @@
 ![Status Bar 24h](assets/status-bar-default-24h.png)
 
 
+## Context Window Detection
+
+Claudemeter automatically detects your context window size — no manual configuration needed.
+
+Claude Code defaults all models to **200K context**, even on Max plans. Extended context (1M, 2M, etc.) is only active when you explicitly enable it via the model suffix — for example, selecting `opus[1m]` in the Claude Code model picker.
+
+Claudemeter detects this using three signals (highest wins):
+
+1. **Claude Code model setting** — reads the `claudeCode.selectedModel` VS Code setting (e.g. `opus[1m]` → 1M)
+2. **Observed token usage** — if `cache_read` tokens exceed 200K during a session, the limit is at least that high
+3. **JSONL model IDs** — future-proofing for when Claude Code writes the suffix into session files
+
+The suffix format is dynamic: `[1m]` = 1M tokens, `[2m]` = 2M, `[500k]` = 500K. No code changes needed when Anthropic increases context sizes.
+
+When extended context is active, the tooltip shows **"Context: 1.0M (extended)"**. To override auto-detection, set `claudemeter.tokenLimit` to a specific value.
+
 ## How It Works
 
 Claudemeter v2 uses streamlined HTTP requests to fetch your usage data directly from Claude.ai's API endpoints. A browser is only needed once for the initial login — after that, your session cookie is stored locally and all subsequent fetches complete in 1-3 seconds with no browser overhead.
@@ -88,16 +104,16 @@ Open VS Code Settings and search for "Claudemeter" to configure:
 ### `claudemeter.localRefreshSeconds`
 
 - **Type**: Number
-- **Default**: `15`
+- **Default**: `10`
 - **Range**: `5-60` seconds
 - **Description**: Local token refresh interval in seconds. Controls how often local Claude Code token data is polled from JSONL files. This is a low-overhead local operation (no web requests). Set higher to reduce CPU usage.
 
 ### `claudemeter.tokenLimit`
 
 - **Type**: Number
-- **Default**: `200000`
-- **Range**: `1000-2000000`
-- **Description**: Context window token limit used to calculate usage percentage
+- **Default**: `0` (auto-detect)
+- **Range**: `0-2000000`
+- **Description**: Context window token limit override. Set to `0` (default) to auto-detect from Claude Code's model selection. Set manually to force a specific limit.
 
 ### `claudemeter.tokenOnlyMode`
 

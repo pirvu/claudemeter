@@ -9,19 +9,23 @@
 const fs = require('fs').promises;
 const { PATHS, getTokenLimit } = require('./utils');
 
-// Session data stored in OS temp dir for persistence across installs
+// Session data stored in OS config dir for persistence across installs
 class SessionTracker {
     constructor(sessionFilePath) {
         this.sessionFilePath = sessionFilePath || PATHS.SESSION_DATA_FILE;
         this.currentSession = null;
+        this._cachedData = null;
     }
 
     async loadData() {
+        if (this._cachedData) return this._cachedData;
+
         try {
             const content = await fs.readFile(this.sessionFilePath, 'utf8');
-            return JSON.parse(content);
+            this._cachedData = JSON.parse(content);
+            return this._cachedData;
         } catch (error) {
-            return {
+            this._cachedData = {
                 sessions: [],
                 totals: {
                     totalSessions: 0,
@@ -29,11 +33,13 @@ class SessionTracker {
                     lastSessionDate: null
                 }
             };
+            return this._cachedData;
         }
     }
 
     async saveData(data) {
-        await fs.writeFile(this.sessionFilePath, JSON.stringify(data, null, 2), 'utf8');
+        this._cachedData = data;
+        await fs.writeFile(this.sessionFilePath, JSON.stringify(data, null, 2), { encoding: 'utf8', mode: 0o600 });
     }
 
     async startSession(description = 'Development session') {

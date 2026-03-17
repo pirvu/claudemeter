@@ -10,6 +10,7 @@ const vscode = require('vscode');
 const { COMMANDS, CONFIG_NAMESPACE, calculateResetClockTime, calculateResetClockTimeExpanded, getCurrencySymbol, getUse24HourTime, formatCompact } = require('./utils');
 const { fetchServiceStatus, getStatusDisplay, formatStatusTime, STATUS_PAGE_URL } = require('./serviceStatus');
 const { formatSubscriptionType, formatRateLimitTier } = require('./credentialsReader');
+const { parseModelAlias, STANDARD_LIMIT } = require('./modelContextWindows');
 
 const LABEL_TEXT = 'Claude';
 
@@ -590,7 +591,9 @@ function updateStatusBar(item, usageData, activityStats = null, sessionData = nu
         ? rawAccountName.replace(/'s Organi[sz]ation$/, '')
         : null;
     if (accountName) {
-        tooltipLines.push(`**${accountName}**`);
+        // Escape markdown special chars in API-sourced display name
+        const safeName = accountName.replace(/([*_`~[\]\\])/g, '\\$1');
+        tooltipLines.push(`**${safeName}**`);
     }
     if (credentialsInfo) {
         const plan = formatSubscriptionType(credentialsInfo.subscriptionType);
@@ -600,6 +603,17 @@ function updateStatusBar(item, usageData, activityStats = null, sessionData = nu
         } else if (plan) {
             tooltipLines.push(plan);
         }
+    }
+    if (sessionData && sessionData.tokenUsage) {
+        const limit = sessionData.tokenUsage.limit;
+        const isExtended = limit > STANDARD_LIMIT;
+        tooltipLines.push(`Context: ${formatCompact(limit)}${isExtended ? ' (extended)' : ''}`);
+    } else if (credentialsInfo) {
+        const ccModel = vscode.workspace.getConfiguration('claudeCode').get('selectedModel', '');
+        const aliasLimit = parseModelAlias(ccModel);
+        const fallbackLimit = aliasLimit || STANDARD_LIMIT;
+        const isExtended = fallbackLimit > STANDARD_LIMIT;
+        tooltipLines.push(`Context: ${formatCompact(fallbackLimit)}${isExtended ? ' (extended)' : ''}`);
     }
     if (accountName || credentialsInfo) {
         tooltipLines.push('');

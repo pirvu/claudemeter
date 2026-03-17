@@ -406,7 +406,7 @@ class ClaudeDataLoader {
             const modelIds = Array.from(detectedModels);
 
             if (highestCacheRead > 0) {
-                const resolvedLimit = getTokenLimit(modelIds);
+                const resolvedLimit = getTokenLimit(modelIds, highestCacheRead);
                 this.log(`Found ${activeSessionCount} active session(s), showing highest usage:`);
                 this.log(`   File: ${highestSessionFile}`);
                 this.log(`   Models detected: ${modelIds.join(', ') || 'none'}`);

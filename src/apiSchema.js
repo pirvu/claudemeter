@@ -139,8 +139,63 @@ function processPrepaidData(creditsData) {
     };
 }
 
+// Convert ISO timestamp to relative time string (e.g. "2h 30m", "5d 21h")
+function calculateResetTime(isoTimestamp) {
+    if (!isoTimestamp) return 'Unknown';
+
+    try {
+        const resetDate = new Date(isoTimestamp);
+        const now = new Date();
+        const diffMs = resetDate - now;
+
+        if (diffMs <= 0) return 'Soon';
+
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (hours > 24) {
+            const days = Math.floor(hours / 24);
+            const remainingHours = hours % 24;
+            return `${days}d ${remainingHours}h`;
+        } else if (hours > 0) {
+            return `${hours}h ${minutes}m`;
+        } else {
+            return `${minutes}m`;
+        }
+    } catch (error) {
+        console.error('Error calculating reset time:', error);
+        return 'Unknown';
+    }
+}
+
+// Build standardised usage response from raw API data
+function processApiResponse(apiResponse, creditsData, overageData, accountInfo) {
+    const data = extractFromSchema(apiResponse, USAGE_API_SCHEMA);
+    const monthlyCredits = processOverageData(overageData);
+    const prepaidCredits = processPrepaidData(creditsData);
+
+    return {
+        usagePercent: data.fiveHour.utilization,
+        resetTime: calculateResetTime(data.fiveHour.resetsAt),
+        usagePercentWeek: data.sevenDay.utilization,
+        resetTimeWeek: calculateResetTime(data.sevenDay.resetsAt),
+        usagePercentSonnet: data.sevenDaySonnet.utilization,
+        resetTimeSonnet: calculateResetTime(data.sevenDaySonnet.resetsAt),
+        usagePercentOpus: data.sevenDayOpus.utilization,
+        resetTimeOpus: calculateResetTime(data.sevenDayOpus.resetsAt),
+        extraUsage: data.extraUsage.value,
+        prepaidCredits: prepaidCredits,
+        monthlyCredits: monthlyCredits,
+        accountInfo: accountInfo,
+        timestamp: new Date(),
+        rawData: apiResponse,
+        schemaVersion: getSchemaInfo().version,
+    };
+}
+
 function getSchemaInfo() {
     return {
+        version: '2.0',
         usageFields: Object.keys(USAGE_API_SCHEMA),
         overageFields: Object.keys(OVERAGE_API_SCHEMA),
         endpoints: Object.keys(API_ENDPOINTS),
@@ -157,5 +212,7 @@ module.exports = {
     matchesEndpoint,
     processOverageData,
     processPrepaidData,
+    calculateResetTime,
+    processApiResponse,
     getSchemaInfo,
 };

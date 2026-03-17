@@ -235,10 +235,11 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Resolve token limit with priority: user override > model detection > fallback
+// Resolve token limit with priority: user override > CC setting > observed usage > fallback
 // modelIds: optional array of model IDs detected from session JSONL
-// Setting value 0 = auto-detect from model (default)
-function getTokenLimit(modelIds = null) {
+// maxObservedTokens: highest token count seen in session (e.g. cache_read)
+// Setting value 0 = auto-detect (default)
+function getTokenLimit(modelIds = null, maxObservedTokens = 0) {
     const config = vscode.workspace.getConfiguration(CONFIG_NAMESPACE);
     const userOverride = config.get('tokenLimit', 0);
 
@@ -247,13 +248,12 @@ function getTokenLimit(modelIds = null) {
         return userOverride;
     }
 
-    // Model-aware resolution
-    if (modelIds && modelIds.length > 0) {
-        const { resolveSessionContextWindow } = require('./modelContextWindows');
-        return resolveSessionContextWindow(modelIds);
-    }
+    // Read Claude Code's selected model to detect context suffix (e.g. "opus[1m]")
+    const { resolveSessionContextWindow, parseModelAlias } = require('./modelContextWindows');
+    const ccModel = vscode.workspace.getConfiguration('claudeCode').get('selectedModel', '');
+    const aliasDeclaredLimit = parseModelAlias(ccModel);
 
-    return DEFAULT_TOKEN_LIMIT;
+    return resolveSessionContextWindow(modelIds, maxObservedTokens, aliasDeclaredLimit);
 }
 
 function getTimeFormat() {
@@ -385,6 +385,20 @@ function formatCompact(value) {
     return Math.round(value).toString();
 }
 
+// Find an available TCP port (for browser debugging)
+function findAvailablePort() {
+    const net = require('net');
+    return new Promise((resolve, reject) => {
+        const server = net.createServer();
+        server.unref();
+        server.on('error', reject);
+        server.listen(0, () => {
+            const port = server.address().port;
+            server.close(() => resolve(port));
+        });
+    });
+}
+
 module.exports = {
     CONFIG_NAMESPACE,
     COMMANDS,
@@ -411,5 +425,6 @@ module.exports = {
     getFileLogger,
     fileLog,
     getDefaultDebugLogPath,
-    splitLines
+    splitLines,
+    findAvailablePort
 };

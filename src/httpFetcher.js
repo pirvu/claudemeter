@@ -36,10 +36,7 @@ const { execSync } = require('child_process');
 const vscode = require('vscode');
 
 const {
-    USAGE_API_SCHEMA,
-    extractFromSchema,
-    processOverageData,
-    processPrepaidData,
+    processApiResponse,
     getSchemaInfo,
 } = require('./apiSchema');
 
@@ -51,19 +48,20 @@ const {
     getDebugChannel,
     sleep,
     fileLog,
+    findAvailablePort,
 } = require('./utils');
 
 const { readCredentials } = require('./credentialsReader');
 
 // Browser-like headers to pass Cloudflare challenge
 const BROWSER_HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
     'Accept': 'application/json, text/plain, */*',
     'Accept-Language': 'en-US,en;q=0.9',
     'Sec-Fetch-Dest': 'empty',
     'Sec-Fetch-Mode': 'cors',
     'Sec-Fetch-Site': 'same-origin',
-    'Sec-Ch-Ua': '"Chromium";v="131", "Not_A Brand";v="24"',
+    'Sec-Ch-Ua': '"Chromium";v="146", "Not_A Brand";v="24"',
     'Sec-Ch-Ua-Mobile': '?0',
     'Sec-Ch-Ua-Platform': '"Windows"',
     'Referer': 'https://claude.ai/settings/usage',
@@ -136,7 +134,7 @@ class ClaudeHttpFetcher {
             savedAt: new Date().toISOString(),
             orgId: orgId || null,
         };
-        fs.writeFileSync(PATHS.SESSION_COOKIE_FILE, JSON.stringify(data, null, 2));
+        fs.writeFileSync(PATHS.SESSION_COOKIE_FILE, JSON.stringify(data, null, 2), { mode: 0o600 });
         fileLog('Session cookie saved');
     }
 
@@ -331,64 +329,7 @@ class ClaudeHttpFetcher {
 
         fileLog('Usage data fetched successfully');
 
-        return this._processApiResponse(usageData, creditsData, overageData);
-    }
-
-    _calculateResetTime(isoTimestamp) {
-        if (!isoTimestamp) return 'Unknown';
-
-        try {
-            const resetDate = new Date(isoTimestamp);
-            const now = new Date();
-            const diffMs = resetDate - now;
-
-            if (diffMs <= 0) return 'Soon';
-
-            const hours = Math.floor(diffMs / (1000 * 60 * 60));
-            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-            if (hours > 24) {
-                const days = Math.floor(hours / 24);
-                const remainingHours = hours % 24;
-                return `${days}d ${remainingHours}h`;
-            } else if (hours > 0) {
-                return `${hours}h ${minutes}m`;
-            } else {
-                return `${minutes}m`;
-            }
-        } catch (error) {
-            console.error('Error calculating reset time:', error);
-            return 'Unknown';
-        }
-    }
-
-    _processApiResponse(apiResponse, creditsData = null, overageData = null) {
-        try {
-            const data = extractFromSchema(apiResponse, USAGE_API_SCHEMA);
-            const monthlyCredits = processOverageData(overageData);
-            const prepaidCredits = processPrepaidData(creditsData);
-
-            return {
-                usagePercent: data.fiveHour.utilization,
-                resetTime: this._calculateResetTime(data.fiveHour.resetsAt),
-                usagePercentWeek: data.sevenDay.utilization,
-                resetTimeWeek: this._calculateResetTime(data.sevenDay.resetsAt),
-                usagePercentSonnet: data.sevenDaySonnet.utilization,
-                resetTimeSonnet: this._calculateResetTime(data.sevenDaySonnet.resetsAt),
-                usagePercentOpus: data.sevenDayOpus.utilization,
-                resetTimeOpus: this._calculateResetTime(data.sevenDayOpus.resetsAt),
-                extraUsage: data.extraUsage.value,
-                prepaidCredits: prepaidCredits,
-                monthlyCredits: monthlyCredits,
-                accountInfo: this.accountInfo,
-                timestamp: new Date(),
-                rawData: apiResponse,
-                schemaVersion: getSchemaInfo().version,
-            };
-        } catch (error) {
-            console.error('Error processing API response:', error);
-            throw new Error('Failed to process API response data');
-        }
+        return processApiResponse(usageData, creditsData, overageData, this.accountInfo);
     }
 
     // --- Login Flow (puppeteer-core, lazy loaded) ---
@@ -666,16 +607,7 @@ class ClaudeHttpFetcher {
     }
 
     async _findAvailablePort() {
-        const net = require('net');
-        return new Promise((resolve, reject) => {
-            const server = net.createServer();
-            server.unref();
-            server.on('error', reject);
-            server.listen(0, () => {
-                const port = server.address().port;
-                server.close(() => resolve(port));
-            });
-        });
+        return findAvailablePort();
     }
 
     // --- Diagnostics ---
