@@ -98,6 +98,28 @@ const CHROMIUM_BROWSERS = {
     }
 };
 
+// Detect organization type from bootstrap data.
+// Personal accounts have org names like "Derek's Organization".
+// Team/Enterprise accounts have custom org names and may expose explicit type fields.
+function detectOrgType(orgName, orgObj) {
+    if (orgName && /'s Organi[sz]ation$/.test(orgName)) {
+        return 'Personal';
+    }
+    // Probe for explicit type fields (field names are speculative —
+    // we don't have team/enterprise accounts to verify against)
+    if (orgObj) {
+        for (const key of ['organization_type', 'type', 'plan_type', 'billing_type', 'account_type']) {
+            const val = orgObj[key];
+            if (typeof val === 'string') {
+                if (/enterprise/i.test(val)) return 'Enterprise';
+                if (/team/i.test(val)) return 'Team';
+                if (/personal|individual/i.test(val)) return 'Personal';
+            }
+        }
+    }
+    return null;
+}
+
 // Login lock: simple file-based mutex to prevent multiple login windows
 const LOGIN_LOCK_FILE = path.join(PATHS.CONFIG_DIR, 'login-in-progress.lock');
 const LOGIN_LOCK_TTL = 5 * 60 * 1000; // 5 minutes
@@ -258,17 +280,23 @@ class ClaudeHttpFetcher {
 
         // Use first org (personal account). If there are multiple,
         // prefer the one matching the CLI credentials org name.
-        const orgUuid = memberships[0].organization.uuid;
-        const orgName = memberships[0].organization.name;
+        const org = memberships[0].organization;
+        const orgUuid = org.uuid;
+        const orgName = org.name;
         this._cachedOrgId = orgUuid;
+
+        const orgType = detectOrgType(orgName, org);
 
         this.accountInfo = {
             name: data.account?.display_name || data.account?.full_name,
             email: data.account?.email_address,
             orgName,
+            orgType,
         };
 
-        fileLog(`Resolved org: ${orgUuid.slice(0, 8)}... (${orgName})`);
+        // Log full org object for debugging — helps discover team/enterprise fields
+        const orgFields = Object.keys(org).filter(k => k !== 'uuid').join(', ');
+        fileLog(`Resolved org: ${orgUuid.slice(0, 8)}... (${orgName}) type=${orgType || 'unknown'} fields=[${orgFields}]`);
         return orgUuid;
     }
 

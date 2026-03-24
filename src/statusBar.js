@@ -590,18 +590,34 @@ function updateStatusBar(item, usageData, activityStats = null, sessionData = nu
     const accountName = rawAccountName
         ? rawAccountName.replace(/'s Organi[sz]ation$/, '')
         : null;
-    if (accountName) {
-        // Escape markdown special chars in API-sourced display name
+    const accountEmail = usageData?.accountInfo?.email;
+    if (accountName && accountEmail) {
+        const safeName = accountName.replace(/([*_`~[\]\\])/g, '\\$1');
+        tooltipLines.push(`**${safeName}** (${accountEmail})`);
+    } else if (accountName) {
         const safeName = accountName.replace(/([*_`~[\]\\])/g, '\\$1');
         tooltipLines.push(`**${safeName}**`);
+    } else if (accountEmail) {
+        tooltipLines.push(accountEmail);
     }
     if (credentialsInfo) {
         const plan = formatSubscriptionType(credentialsInfo.subscriptionType);
         const tier = formatRateLimitTier(credentialsInfo.rateLimitTier);
-        if (plan && tier && tier !== plan) {
-            tooltipLines.push(`${plan} · ${tier}`);
+        const orgType = usageData?.accountInfo?.orgType;
+        const orgName = usageData?.accountInfo?.orgName;
+        // Build plan label with org type: "Max (Personal)" or "Max (Acme Corp)"
+        let planLabel = plan;
+        if (plan && orgType) {
+            planLabel = `${plan} (${orgType})`;
+        } else if (plan && orgName && !/'s Organi[sz]ation$/.test(orgName)) {
+            planLabel = `${plan} (${orgName})`;
         } else if (plan) {
-            tooltipLines.push(plan);
+            planLabel = `${plan} (Personal)`;
+        }
+        if (planLabel && tier && tier !== plan) {
+            tooltipLines.push(`${planLabel} · ${tier}`);
+        } else if (planLabel) {
+            tooltipLines.push(planLabel);
         }
     }
     if (sessionData && sessionData.tokenUsage) {
