@@ -1,3 +1,10 @@
+## [2.1.3](https://github.com/hyperi-io/claudemeter/compare/v2.1.2...v2.1.3) (2026-03-24)
+
+
+### Bug Fixes
+
+* update semantic-release-action to v6 for node24 support ([5573d17](https://github.com/hyperi-io/claudemeter/commit/5573d1761d4c9d32e16fe6077d19862a2fb1d365))
+
 ## [2.1.2](https://github.com/hyperi-io/claudemeter/compare/v2.1.1...v2.1.2) (2026-03-24)
 
 
