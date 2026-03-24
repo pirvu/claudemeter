@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/hyperi-io/claudemeter/compare/v2.1.0...v2.1.1) (2026-03-24)
+
+
+### Bug Fixes
+
+* update dependencies and patch transitive security vulnerabilities ([4456bf9](https://github.com/hyperi-io/claudemeter/commit/4456bf94bee3365e038f127e52b82b333b8a5535))
+
 # [2.1.0](https://github.com/hyperi-io/claudemeter/compare/v2.0.6...v2.1.0) (2026-03-17)
 
 
