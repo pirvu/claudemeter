@@ -148,7 +148,7 @@ class ClaudeHttpFetcher {
     _saveCookie(sessionKey, expires, orgId) {
         const dir = path.dirname(PATHS.SESSION_COOKIE_FILE);
         if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
+            fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         }
         const data = {
             sessionKey,
@@ -383,9 +383,9 @@ class ClaudeHttpFetcher {
         }
         const dir = path.dirname(LOGIN_LOCK_FILE);
         if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
+            fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         }
-        fs.writeFileSync(LOGIN_LOCK_FILE, JSON.stringify({ timestamp: Date.now(), pid: process.pid }));
+        fs.writeFileSync(LOGIN_LOCK_FILE, JSON.stringify({ timestamp: Date.now(), pid: process.pid }), { mode: 0o600 });
     }
 
     _releaseLoginLock() {

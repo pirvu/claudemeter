@@ -70,13 +70,13 @@ const BrowserState = {
         try {
             const dir = path.dirname(PATHS.BROWSER_STATE_FILE);
             if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
+                fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
             }
             fs.writeFileSync(PATHS.BROWSER_STATE_FILE, JSON.stringify({
                 state,
                 reason,
                 timestamp: Date.now()
-            }));
+            }), { mode: 0o600 });
         } catch (e) {
             console.warn('Failed to write browser state:', e.message);
         }
@@ -137,7 +137,7 @@ class ClaudeUsageScraper {
         const lockFile = PATHS.BROWSER_LOCK_FILE;
         const dir = path.dirname(lockFile);
         if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
+            fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         }
 
         if (debug) {
@@ -159,7 +159,7 @@ class ClaudeUsageScraper {
             }
 
             // Acquire the lock
-            fs.writeFileSync(lockFile, JSON.stringify({ timestamp: Date.now(), pid: process.pid }));
+            fs.writeFileSync(lockFile, JSON.stringify({ timestamp: Date.now(), pid: process.pid }), { mode: 0o600 });
             this.releaseBrowserLock = () => {
                 try { if (fs.existsSync(lockFile)) fs.unlinkSync(lockFile); } catch { /* ignore */ }
             };

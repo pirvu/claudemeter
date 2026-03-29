@@ -137,14 +137,14 @@ class FileLogger {
         try {
             const dir = path.dirname(this.logFile);
             if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
+                fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
             }
 
             this.trimIfNeeded();
 
             const timestamp = new Date().toISOString();
             const line = `${timestamp} ${this.instanceId} ${message}\n`;
-            fs.appendFileSync(this.logFile, line);
+            fs.appendFileSync(this.logFile, line, { mode: 0o600 });
         } catch (e) {
             // Silently ignore write errors to avoid blocking
         }
