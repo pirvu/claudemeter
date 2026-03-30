@@ -73,6 +73,53 @@ When you log in, the extension verifies that the browser account matches the acc
 - VS Code 1.109.0 or higher
 - A Chromium-based browser for login (Chrome, Chromium, Brave, Edge, Arc, Vivaldi, or Opera)
 
+### Install from VS Code Marketplace
+
+Search for **Claudemeter** in the VS Code Extensions panel (`Ctrl+Shift+X` / `Cmd+Shift+X`) and click **Install**.
+
+### Install from a Forked Repository
+
+If you want to test changes from a fork or contribute to development:
+
+1. **Fork and clone** the repository:
+
+   ```bash
+   git clone https://github.com/<your-username>/claudemeter.git
+   cd claudemeter
+   ```
+
+2. **Install dependencies and build**:
+
+   ```bash
+   npm ci
+   npm run build
+   ```
+
+3. **Package the extension** as a `.vsix` file:
+
+   ```bash
+   npx @vscode/vsce package --no-dependencies
+   ```
+
+   This produces a file like `claudemeter-2.x.x.vsix` in the project root.
+
+4. **Install the `.vsix` in VS Code**:
+
+   - Open the Extensions panel (`Ctrl+Shift+X` / `Cmd+Shift+X`)
+   - Click the **`···`** menu (top-right of the Extensions panel)
+   - Select **Install from VSIX…**
+   - Choose the `.vsix` file you just built
+
+   Or via the command line:
+
+   ```bash
+   code --install-extension claudemeter-*.vsix
+   ```
+
+5. **Reload VS Code** when prompted.
+
+> **Tip:** For iterative development without rebuilding a VSIX each time, open the repo in VS Code and press `F5` to launch an **Extension Development Host** — a second VS Code window with your local changes loaded. This requires the `vscode` engine version to match; see `.vscode/launch.json` for the run configuration.
+
 ## First-Time Setup
 
 1. On first launch, the extension prompts you to log in

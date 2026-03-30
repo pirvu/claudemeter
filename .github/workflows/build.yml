@@ -1,0 +1,80 @@
+name: Build
+
+# Builds the VSIX and attaches it to a rolling "dev-build" pre-release so it
+# can be downloaded and installed directly without checking out the repo.
+#
+# Install the downloaded VSIX:
+#   code --install-extension claudemeter-*.vsix
+#   or: VS Code Extensions panel → ··· → Install from VSIX…
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE*', '.gitignore']
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build VSIX
+    runs-on: ${{ vars.GH_RUNNER_DEFAULT || 'ubuntu-latest' }}
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Package VSIX
+        run: npx @vscode/vsce package --no-dependencies
+
+      - name: Get VSIX info
+        id: vsix
+        run: |
+          VSIX_FILE=$(ls *.vsix | head -1)
+          VERSION=$(node -p "require('./package.json').version")
+          echo "filename=$VSIX_FILE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Built: $VSIX_FILE (v$VERSION)"
+
+      - name: Create or update dev-build release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev-build
+          name: "Dev Build"
+          prerelease: true
+          body: |
+            Automated development build — always tracks the latest commit on `main`.
+
+            **Version:** ${{ steps.vsix.outputs.version }}
+            **Commit:** ${{ github.sha }}
+            **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            ### Install
+
+            1. Download `${{ steps.vsix.outputs.filename }}` below
+            2. Run:
+               ```bash
+               code --install-extension ${{ steps.vsix.outputs.filename }}
+               ```
+               Or open VS Code → Extensions (`Ctrl+Shift+X`) → `···` menu → **Install from VSIX…**
+          files: ${{ steps.vsix.outputs.filename }}
+          make_latest: false
+
+      - name: Summary
+        run: |
+          echo "## VSIX Built" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**File:** \`${{ steps.vsix.outputs.filename }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.vsix.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[Download from dev-build release](${{ github.server_url }}/${{ github.repository }}/releases/tag/dev-build)" >> $GITHUB_STEP_SUMMARY
