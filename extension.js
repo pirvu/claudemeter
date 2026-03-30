@@ -171,6 +171,8 @@ async function fetchUsageHttp(isManualRetry = false) {
             if (!isManualRetry) {
                 const msg = error.message === 'NO_ORG_ID'
                     ? 'No Claude Code credentials found. Install and run Claude Code first.'
+                    : error.message === 'SESSION_EXPIRED'
+                    ? 'Session expired. Click status bar to re-login.'
                     : 'No session. Click status bar to login.';
                 return { webError: new Error(msg), loginCancelled: false };
             }
@@ -193,6 +195,9 @@ async function fetchUsageHttp(isManualRetry = false) {
                     return { webError: new Error('Login timed out. Click status bar to retry.'), loginCancelled: false };
                 } else if (loginError.message === 'CHROME_NOT_FOUND') {
                     return { webError: new Error('Chromium-based browser required. Install Chrome, Chromium, Brave, or Edge to fetch Claude.ai usage stats.'), loginCancelled: false };
+                } else if (loginError.message === 'SESSION_EXPIRED') {
+                    httpFetcher.clearSession();
+                    return { webError: new Error('Session expired. Click status bar to re-login.'), loginCancelled: false };
                 }
                 return { webError: loginError, loginCancelled: false };
             }
