@@ -52,6 +52,7 @@ const {
 } = require('./utils');
 
 const { readCredentials } = require('./credentialsReader');
+const { isCookieExpired } = require('./cookieUtils');
 
 // Browser-like headers to pass Cloudflare challenge
 const BROWSER_HEADERS = {
@@ -163,8 +164,9 @@ class ClaudeHttpFetcher {
     hasExistingSession() {
         const cookie = this._readCookie();
         if (!cookie) return false;
-        // Check expiry if available
-        if (cookie.expires && cookie.expires <= Date.now() / 1000) {
+        // Check expiry if available.
+        // expires = -1 means a session cookie (no explicit expiry) — treat as valid.
+        if (isCookieExpired(cookie.expires)) {
             fileLog('Session cookie expired');
             return false;
         }
@@ -309,8 +311,9 @@ class ClaudeHttpFetcher {
             throw new Error('NO_SESSION');
         }
 
-        // Check cookie expiry
-        if (cookie.expires && cookie.expires <= Date.now() / 1000) {
+        // Check cookie expiry.
+        // expires = -1 means a session cookie (no explicit expiry) — treat as valid.
+        if (isCookieExpired(cookie.expires)) {
             throw new Error('SESSION_EXPIRED');
         }
 
