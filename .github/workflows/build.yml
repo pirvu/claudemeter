@@ -35,7 +35,10 @@ jobs:
         run: npm run build
 
       - name: Package VSIX
-        run: npx @vscode/vsce package --no-dependencies
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          VERSION=$(node -p "require('./package.json').version")
+          npx @vscode/vsce package --no-dependencies --out "claudemeter-${VERSION}-${SHORT_SHA}.vsix"
 
       - name: Get VSIX info
         id: vsix
